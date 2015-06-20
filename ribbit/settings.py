@@ -1,18 +1,45 @@
 # Django settings for ribbit project.
+import os
+ 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) #stores the location of the directory in which settings.py is stored. This will allow us to use relative paths for future constants.
+MAIN_DIR = os.path.dirname(os.path.dirname(__file__))
 
-DEBUG = True
+LOGIN_URL = '/'
+
+print "CHECKING_HEROKU!"
+ON_HEROKU = os.environ.get('ON_HEROKU')
+
+if ON_HEROKU == '1':
+    DEBUG=False
+else:
+    DEBUG=True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+    ('Hassan Baig', 'baig.hassan@gmail.com'),
+    ('Sophie Pervez', 'spz3113@gmail.com'),
+    ('Fahad Rao', 'fahadrao@gmail.com'),
 )
 
 MANAGERS = ADMINS
 
-DATABASES = {
+if ON_HEROKU == '1':
+# Parse database configuration from $DATABASE_URL
+    import dj_database_url
+    print "ON_HEROKU!"
+    DATABASES = {
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    }
+#DATABASES['default'] = dj_database_url.config()
+else:
+# Parse database configuration from $DATABASE_URL
+    import dj_database_url
+    print "NOT_ON_HEROKU!"
+# DATABASES['default'] = dj_database_url.config()
+    DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'database.db',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': '',
         'PASSWORD': '',
@@ -23,13 +50,13 @@ DATABASES = {
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Asia/Oral'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -61,7 +88,7 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') #Django finds static files from this directory
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -72,6 +99,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(BASE_DIR, 'static'),
 )
 
 # List of finder classes that know how to find static files in
@@ -111,6 +139,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(BASE_DIR, 'templates')
 )
 
 INSTALLED_APPS = (
@@ -120,6 +149,8 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'south',
+    'ribbit_app',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
