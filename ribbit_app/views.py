@@ -3,6 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from ribbit_app.forms import AuthenticateForm, UserCreateForm, RibbitForm
 from ribbit_app.models import Ribbit
+from django.contrib.auth.decorators import login_required
 
 def index(request, auth_form=None, user_form=None):
     # If user is logged in, render the relevent templates
@@ -57,3 +58,27 @@ def signup(request):#the view to sign up and register a user
         else: #Otherwise, call the index function and pass in the instance of user_form submitted by the user to list out the errors
             return index(request, user_form=user_form)
     return redirect('/')#if the request isn't POST then the user is redirected to the root url
+
+@login_required #this decorator executes the function only if the user is authenticated; else the user is redirected to the path specified in LOGIN_URL constant in the settings
+def submit(request):
+    if request.method == "POST":
+        ribbit_form = RibbitForm(data=request.POST)
+        next_url = request.POST.get("next_url", "/")
+        if ribbit_form.is_valid(): #If form validation is successful, we manually set the user to the one contained in the session and then save the records.
+            ribbit = ribbit_form.save(commit=False)
+            ribbit.user = request.user
+            ribbit.save()
+            return redirect(next_url) #the user is redirected to the path specified in next_url field which is a hidden form field we manually entered in the template for this purpose. The value of next_url is passed along in the views that render the Ribbit Form.
+        else:
+            return public(request, ribbit_form)
+    return redirect('/')
+
+@login_required #this decorator executes the function only if the user is authenticated; else the user is redirected to the path specified in LOGIN_URL constant in the settings
+def public(request, ribbit_form=None):
+    ribbit_form = ribbit_form or RibbitForm()
+    ribbits = Ribbit.objects.reverse()[:10] #we query the database for the last 10 ribbits by slicing the queryset to the last 10 elements
+    return render(request, #The form along with the ribbits are then rendered to the template
+                  'public.html',
+                  {'ribbit_form': ribbit_form, 'next_url': '/ribbits',
+                   'ribbits': ribbits, 'username': request.user.username})
+                                                                        
