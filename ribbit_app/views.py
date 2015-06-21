@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from ribbit_app.forms import AuthenticateForm, UserCreateForm, RibbitForm
 from ribbit_app.models import Ribbit
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.http import Http404
+from django.core.exceptions import ObjectDoesNotExist
 
 def index(request, auth_form=None, user_form=None):
     # If user is logged in, render the relevent templates
@@ -81,4 +84,46 @@ def public(request, ribbit_form=None):
                   'public.html',
                   {'ribbit_form': ribbit_form, 'next_url': '/ribbits',
                    'ribbits': ribbits, 'username': request.user.username})
+
+def get_latest(user): #This makes use of a backward relation on the User<-->Ribbit relation.
+    try: #user.ribbit_set.all() returns all the ribbits by the user. We order the ribbits by id in descending order and slice the first element
+        return user.ribbit_set.order_by('-id')[0]
+    except IndexError:
+        return ""
+ 
+ 
+@login_required
+def users(request, username="", ribbit_form=None):
+    if username:#if a username is passed and is not empty.
+        # Show a profile
+        try: #ensuring that only logged in users are able to view profiles
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise Http404 #raise a Http404 exception provided by Django to redirect to the default 404 template
+        ribbits = Ribbit.objects.filter(user=user.id)
+        if username == request.user.username or request.user.profile.follows.filter(user__username=username): 
+            # check if the profile requested is of the logged in user or one of his buddies.
+            return render(request, 'user.html', {'user': user, 'ribbits': ribbits, }) #If so we don't need to render a follow link in the profile since the 'follow' relationship is already established
+        return render(request, 'user.html', {'user': user, 'ribbits': ribbits, 'follow': True, }) #Otherwise, we pass along the follow parameter in the view to print the Follow link
+    users = User.objects.all().annotate(ribbit_count=Count('ribbit')) #if username was empty, fetch a list of all the users and use the annotate() function to add a ribbit_count attribute to all objects, which stores the number of Ribbits made by each user in the queryset.
+    ribbits = map(get_latest, users) #getting latest ribbit by each user, use Python's built in map() function for this and call get_latest() to all the elements of users queryset
+    obj = zip(users, ribbits) #using Python's zip() function to link up each element of both iterators (users and ribbits) so that we have a tuple with User Object and Latest Ribbit pair
+    ribbit_form = ribbit_form or RibbitForm()
+    return render(request,
+                  'profiles.html',
+                  {'obj': obj, 'next_url': '/users/', #pass along the zipped object along with the forms to the template
+                   'ribbit_form': ribbit_form,
+                   'username': request.user.username, })
+
+@login_required 
+def follow(request): #view that will accept the request to follow a user
+    if request.method == "POST":
+        follow_id = request.POST.get('follow', False) # we get the value of the follow parameter, passed by POST
+        if follow_id: #check if a user exists and add the relation
+            try:
+                user = User.objects.get(id=follow_id)
+                request.user.profile.follows.add(user.profile) #adding the relation
+            except ObjectDoesNotExist:
+                return redirect('/users/') #else catch an ObjectDoesNotExist exception and redirect the user to the page that lists all User Profiles.
+    return redirect('/users/')
                                                                         

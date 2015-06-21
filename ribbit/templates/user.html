@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block login %}
+    {% with user.username as username %} <!--pass the username of the logged in template to the parent template using the {% with %} construct-->
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+ 
+{% block content %}
+    <div class="panel left">
+        <h1>{{ user.first_name }}'s Profile</h1><!--display the user's profile-->
+        <div class="ribbitWrapper">
+            <a href="/users/{{ user.username }}">
+                <img class="avatar" src="{{ user.profile.gravatar_url }}">
+                <span class="name">{{ user.first_name }}</span>
+            </a>
+                @{{ user.username }}
+            <p>
+                {{ ribbits.count }} Ribbits
+                <span class="spacing">{{ user.profile.follows.all.count }} Following</span>
+                <span class="spacing">{{ user.profile.followed_by.all.count }} Followers</span>
+            </p>
+            {% if follow %} <!-- display the 'follow' link only if the follow variable is set to True-->
+            <form action="/follow" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="follow" value="{{ user.id }}">
+                <input type="submit" value="Follow">
+            </form>
+            {% endif %}
+             </div>
+    </div>
+ 
+    <div class="panel left">
+        <h1>{{ user.first_name }}'s Ribbits</h1>
+        {% for ribbit in ribbits %} <!--list all the ribbits created by the user by iterating over the ribbits variable.-->
+        <div class="ribbitWrapper">
+            <a href="/users/{{ user.username }}">
+                <img class="avatar" src="{{ user.profile.gravatar_url }}">
+                <span class="name">{{ ribbit.user.first_name }}</span>
+            </a>
+            @{{ ribbit.user.username }}
+            <span class="time">{{ ribbit.creation_date|timesince }}</span>
+            <p>{{ ribbit.content }}</p>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -12,4 +12,7 @@ urlpatterns = patterns('',
     url(r'^signup$', 'ribbit_app.views.signup'), # signup
     url(r'^ribbits$', 'ribbit_app.views.public'), # public ribbits
     url(r'^submit$', 'ribbit_app.views.submit'), # submit new ribbit
+    url(r'^users/$', 'ribbit_app.views.users'),
+    url(r'^users/(?P<username>\w{0,30})/$', 'ribbit_app.views.users'),#<?P<username> captures the username queried via GET, and \w{0,30} asserts that max length for a username is 30 characters
+    url(r'^follow$', 'ribbit_app.views.follow'),
 )
