@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block login %}
-    {% with user.username as username %} <!--pass the username of the logged in template to the parent template using the {% with %} construct-->
+    {% with user.username as username %} <!--pass the username of the logged in template to the parent template using the 'with' construct-->
         {{ block.super }}
     {% endwith %}
 {% endblock %}
