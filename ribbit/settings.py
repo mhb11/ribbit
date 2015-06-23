@@ -149,6 +149,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.admin',
     'south',
     'ribbit_app',
     # Uncomment the next line to enable the admin:
