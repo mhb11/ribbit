@@ -17,3 +17,7 @@ urlpatterns = patterns('',
     url(r'^users/(?P<username>\w{0,30})/$', 'ribbit_app.views.users'),#<?P<username> captures the username queried via GET, and \w{0,30} asserts that max length for a username is 30 characters
     url(r'^follow$', 'ribbit_app.views.follow'),
 )
+
+urlpatterns += patterns('django.contrib.staticfiles.views',
+        url(r'^static/(?P<path>.*)$', 'serve'),
+    )
